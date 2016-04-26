@@ -20,6 +20,7 @@ Reselect.value('reselectDefaultOptions', {
 
 			return function($scope, $element, $attrs, ctrls){
 				var $Reselect = ctrls[0];
+				console.log('ctrls', ctrls);
 				var $transcludeElems = null;
 
 				transcludeFn($scope, function(clone){
@@ -50,6 +51,7 @@ Reselect.value('reselectDefaultOptions', {
 
 			// Options
 			ctrl.options = angular.extend({}, reselectDefaultOptions, $scope.reselectOptions);
+			console.log(ctrl.options);
 
 			// Variables
 			ctrl.value = null;

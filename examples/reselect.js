@@ -6,7 +6,7 @@
  */
 
 
-(function () { 
+(function () {
 'use strict';
 /**
  * Common shared functionalities
@@ -41,11 +41,11 @@ Reselect.value('reselectDefaultOptions', {
 					$element.append(clone[1]);
 				});
 			};
-			
+
 		},
 		controllerAs: '$reselect',
 		controller: ['$scope', 'reselectDefaultOptions', function($scope, reselectDefaultOptions){
-			
+
 			var ctrl = this;
 
 			// Options
@@ -81,7 +81,7 @@ Reselect.directive('reselectChoices', ['ChoiceParser', '$compile', function(Choi
 			return function($scope, $element, $attrs, $Reselect, transcludeFn){
 				var self = $scope.choices = {};
 
-				
+
 				self.CHOICE_TEMPLATE = null;
 
 				transcludeFn(function(clone){
@@ -112,7 +112,7 @@ Reselect.directive('reselectChoices', ['ChoiceParser', '$compile', function(Choi
 				$list.css('height', (self.choiceHeight * self.choices.length) + 'px');
 
 				self.lazyContainers = [];
-				
+
 				self._calculate = function(){
 
 					for(var i = 0; i < numLazyContainers; i++){
@@ -158,7 +158,7 @@ Reselect.directive('reselectChoices', ['ChoiceParser', '$compile', function(Choi
 					// console.clear();
 
 					// console.debug('lastCheck: ' + lastCheck);
-					
+
 					var activeContainers = [];
 					var inactiveContainers = [];
 
@@ -210,10 +210,10 @@ Reselect.directive('reselectChoices', ['ChoiceParser', '$compile', function(Choi
 								container.scope.$evalAsync();
 							}else{
 								// console.error('not enough');
-							}							
+							}
 						}
 					}
-					
+
 					lastCheck = Math.floor(scrollTop/self.choiceHeight) * self.choiceHeight;
 				};
 
@@ -224,7 +224,7 @@ Reselect.directive('reselectChoices', ['ChoiceParser', '$compile', function(Choi
 				});
 
 				// Init
-				
+
 				window.up = self._calculateLazyRender;
 				self._calculate();
 				self._calculateLazyRender();
@@ -241,7 +241,7 @@ $templateCache.put("templates/reselect.options.directive.tpl.html","<div class=\
  *
  * Services credited to angular-ui team
  * https://github.com/angular-ui/ui-select/blob/master/src/uisRepeatParserService.js
- * 
+ *
  */
 
 Reselect.service('ChoiceParser', ['$parse', function($parse) {
