@@ -13,7 +13,7 @@ Reselect is a directive built off of [Angular's HTML SELECT](https://docs.angula
 ## Usage
 Download [Reselect](https://github.com/reselect/Reselect) and use the production version within the `dist/` folder.
 
-As an element:
+###As an element:
 ````html
 <reselect
     reselect-options=""
@@ -25,6 +25,20 @@ As an element:
     </div>
 </reselect>
 ````
+### Arguments
+
+`reselect`
+| Param          | Type | Details                                       |
+|---------------:|-----:|----------------------------------------------:|
+|reselect-options|string|                                               |
+|ng-model        |string| Assignable angular expression to data-bind to |
+
+`reselect-choices`
+| Param          | Type | Details                                                                                            |
+|---------------:|-----:|---------------------------------------------------------------------------------------------------:|
+|options         |string| Sets the options that Reselect is populated with and defines what is set to the model on selection.|
+|value           |string| Sets what is displayed in results                                                                  |
+|ng-bind         |string| data-bind selected result                                                                          |
 
 ## Contributing
 
