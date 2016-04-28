@@ -74,7 +74,7 @@ Reselect.directive('reselectChoices', ['ChoiceParser', '$compile',
 					 * each choice in the options list
 					 */
 
-					transcludeFn(function(clone) {
+					transcludeFn(function(clone, scope) {
 						$reselectChoices.CHOICE_TEMPLATE.append(clone);
 					});
 
@@ -117,10 +117,10 @@ Reselect.directive('reselectChoices', ['ChoiceParser', '$compile',
 					/**
 					 * Options
 					 */
-					
-					self.options = angular.extend({}, reselectChoicesOptions, $attrs.reselectChoices || {}, {
-						noOptionsText: $attrs.noOptionsText
-					});
+
+					self.options = angular.extend({}, reselectChoicesOptions, $attrs.reselectChoices || {});
+
+					self.options.noOptionsText = $attrs.noOptionsText || self.options.noOptionsText;
 
 					/**
 					 * Choices Functionalities
@@ -132,7 +132,6 @@ Reselect.directive('reselectChoices', ['ChoiceParser', '$compile',
 						self.parsedOptions = ChoiceParser.parse($attrs.options);
 
 						self.DataAdapter = new ReselectDataAdapter();
-
 						self.DataAdapter.updateData(self.parsedOptions.source($scope.$parent));
 
 						self.DataAdapter.observe = function(onChange) {
@@ -201,6 +200,7 @@ Reselect.directive('reselectChoices', ['ChoiceParser', '$compile',
 					 */
 
 					self.LazyDropdown = new LazyScroller($scope, {
+						scopeName: self.parsedOptions.itemName,
 						container: self.$container,
 						list: self.$list,
 						choiceHeight: 36,
@@ -225,9 +225,9 @@ Reselect.directive('reselectChoices', ['ChoiceParser', '$compile',
 					self._selectChoice = function(containerId) {
 						var selectedScope = self.LazyDropdown.lazyContainers[containerId].scope;
 
-						var value = angular.copy(selectedScope.$eval($attrs.value));
-						
-						$Reselect.selectValue(value, selectedScope.$choice);
+						var value = angular.copy(self.parsedOptions.modelMapper(selectedScope));
+
+						$Reselect.selectValue(value, selectedScope[self.parsedOptions.itemName]);
 					};
 
 					/**
@@ -255,7 +255,6 @@ Reselect.directive('reselectChoices', ['ChoiceParser', '$compile',
 						}else{
 
 						}
-
 					};
 				}
 			]

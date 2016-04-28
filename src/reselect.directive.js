@@ -2,7 +2,7 @@ Reselect.value('reselectDefaultOptions', {
 	placeholderTemplate: function(){
 		return 'Select an option';
 	},
-	selectionTemplate: angular.element('<div><span ng-bind="$selection"></span></div>')
+	selectionTemplate: angular.element('<span ng-bind="$selection"></span>')
 })
 
 .directive('reselect', ['$compile', function($compile){
@@ -12,36 +12,42 @@ Reselect.value('reselectDefaultOptions', {
 		require     : ['^reselect', '^ngModel'],
 		transclude  : true,
 		replace     : true,
-		scope: {
-			ngModel         : '=',
-			reselectOptions : '='
-		},
-		compile: function($element, $attrs, transcludeFn){
+		scope		: true,
+		link: function($scope, $element, $attrs, ctrls, transcludeFn){
 
-			return function($scope, $element, $attrs, ctrls){
-				var $Reselect = ctrls[0];
-				console.log('ctrls', ctrls);
-				var $transcludeElems = null;
+			var $Reselect = ctrls[0];
+			var $transcludeElems = null;
 
-				transcludeFn($scope, function(clone){
-					$transcludeElems = clone;
-					$element.append(clone);
-				}).detach();
+			transcludeFn($scope, function(clone, scp){
+				$transcludeElems = clone;
+				$element.append(clone);
+			}).detach();
 
-				$transcludeElems = angular.element('<div>').append($transcludeElems);
+			// Wrap array of transcluded elements in a <div> so we can run css queries
+			$transcludeElems = angular.element('<div>').append($transcludeElems);
 
-				var $choice = $transcludeElems[0].querySelectorAll('.reselect-choices, [reselect-choices]');
-				var $selection = $transcludeElems[0].querySelectorAll('.reselect-selection, [reselect-selection]');
-					$selection = $selection.length ? $selection : $Reselect.options.selectionTemplate.clone();
+			// Transclude [reselect-choices] directive
+			var $choice = $transcludeElems[0].querySelectorAll('.reselect-choices, [reselect-choices], reselect-choices');
 
-				angular.element($element[0].querySelectorAll('.reselect-dropdown')).append($choice);
-				angular.element($element[0].querySelectorAll('.reselect-rendered-selection')).append($selection);
+			angular.element($element[0].querySelectorAll('.reselect-dropdown')).append($choice);
 
-				$Reselect.transcludeCtrls.$ReselectChoice = angular.element($choice).controller('reselectChoices');
+			// Transclude [reselect-selection] directive
+			var $selection = $transcludeElems[0].querySelectorAll('.reselect-selection, [reselect-selection], reselect-selection');
+				$selection = $selection.length ? $selection : $Reselect.options.selectionTemplate.clone();
 
-				$compile($selection)($Reselect.selection_scope);
-			};
+			angular.element($element[0].querySelectorAll('.reselect-rendered-selection')).append($selection);
 
+			// Transclude [reselect-no-choice] directive
+			var $noChoice = angular.element($transcludeElems[0].querySelectorAll('.reselect-no-choice, [reselect-selection], reselect-selection'));
+
+			if($noChoice.length === 1){
+				angular.element($element[0].querySelectorAll('.reselect-empty-container')).html('').append($noChoice);
+			}
+
+			// Store [reselect-choices]'s controller
+			$Reselect.transcludeCtrls.$ReselectChoice = angular.element($choice).controller('reselectChoices');
+
+			$compile($selection)($Reselect.selection_scope);
 		},
 		controllerAs: '$reselect',
 		controller: ['$scope', '$element', 'reselectDefaultOptions', '$timeout', function($scope, $element, reselectDefaultOptions, $timeout){
@@ -51,7 +57,6 @@ Reselect.value('reselectDefaultOptions', {
 
 			// Options
 			ctrl.options = angular.extend({}, reselectDefaultOptions, $scope.reselectOptions);
-			console.log(ctrl.options);
 
 			// Variables
 			ctrl.value = null;
@@ -112,16 +117,14 @@ Reselect.value('reselectDefaultOptions', {
 							continue;
 						}
 
-						if(trackBy){
-							choiceMatch = choices[i][trackBy];
-							valueSelectedMatch = valueSelected[trackBy];
-						}else{
-							choiceMatch = choices[i];
-							valueSelectedMatch = valueSelected;
-						}
+						var scp = {};
+						scp[ctrl.transcludeCtrls.$ReselectChoice.parsedOptions.itemName] = choices[i];
+
+						choiceMatch = ctrl.transcludeCtrls.$ReselectChoice.parsedOptions.modelMapper(scp);
+						valueSelectedMatch = valueSelected;
 
 						if(choiceMatch === valueSelectedMatch){
-							valueToBeSelected = choices[i][trackBy];
+							valueToBeSelected = choices[i];
 							break;
 						}
 					}
@@ -130,7 +133,7 @@ Reselect.value('reselectDefaultOptions', {
 				}
 
 				if(valueToBeSelected){
-					ctrl.selectValue($ngModel.$viewValue);
+					ctrl.selectValue($ngModel.$viewValue, valueToBeSelected);
 				}else{
 					if(ctrl.options.resolveInvalid && typeof ctrl.options.resolveInvalid === 'function'){
 						var validateDone = function(value){
