@@ -246,10 +246,11 @@ Reselect.directive('reselectChoices', ['ChoiceParser', '$compile',
 					self.render = function(choices) {
 						self.LazyDropdown.choices = choices || self.DataAdapter.data;
 
-						// Check if choices is empty
-						self.haveChoices = !!self.LazyDropdown.choices.length;
 
 						if(self.LazyDropdown.choices && self.LazyDropdown.choices.length >= 0){
+							// Check if choices is empty
+							self.haveChoices = !!self.LazyDropdown.choices.length;
+
 							var dimensions = self.LazyDropdown.renderContainer();
 							self.LazyDropdown._calculateLazyRender(true);
 
@@ -263,7 +264,7 @@ Reselect.directive('reselectChoices', ['ChoiceParser', '$compile',
 								self.loadMore();
 							}
 						}else{
-
+							self.haveChoices = false;
 						}
 					};
 				}
