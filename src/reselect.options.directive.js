@@ -62,16 +62,20 @@ Reselect.directive('reselectChoices', ['ChoiceParser', '$compile',
 			compile: function(element, attrs) {
 
 				if (!attrs.options) {
-					console.warn('[reselect-options] directive requires the [options] attribute.');
+					console.warn('[reselect-choices] directive requires the [options] attribute.');
 					return;
 				}
 
 				return function($scope, $element, $attrs, $ctrls, transcludeFn) {
+					// get reselectChoices reselect dom elements
+					//console.log('ctrl ', $ctrls);
 					var $reselectChoices = $ctrls[0];
+					//console.log('reselectChoices ', $reselectChoices);
 					var $Reselect = $ctrls[1];
+					//console.log('reselect ', $Reselect);
 
 					/**
-					 * Manipulating the transluded html template taht is used to display
+					 * Manipulating the transluded html template that is used to display
 					 * each choice in the options list
 					 */
 

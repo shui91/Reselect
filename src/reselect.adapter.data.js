@@ -68,7 +68,7 @@ Reselect.service('ReselectAjaxDataAdapter', ['$http', function($http){
         this.pagination = {};
 
         this.parsedOptions = parsedOptions;
-
+        //console.log('parsedOptions ' , this.parsedOptions);
         this.options = angular.extend({
             params: function(params){
                 return params;
