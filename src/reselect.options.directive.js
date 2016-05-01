@@ -124,9 +124,9 @@ Reselect.directive('reselectChoices', ['ChoiceParser', '$compile',
 					/**
 					 * Options
 					 */
-
+					console.log('options prior to extend ', self.options);
 					self.options = angular.extend({}, reselectChoicesOptions, $attrs.reselectChoices || {});
-
+					console.log('options after extend ', self.options);
 					self.options.noOptionsText = $attrs.noOptionsText || self.options.noOptionsText;
 
 					/**
@@ -174,9 +174,12 @@ Reselect.directive('reselectChoices', ['ChoiceParser', '$compile',
 						self.DataAdapter.getData(self.search_term)
 							.then(function(choices) {
 								if(!self.search_term){
+									console.log('no search term');
 									self.DataAdapter.updateData(choices.data, loadingMore);
+									console.log(self.DataAdapter.updateData(choices.data, loadingMore));
 									self.render();
 								}else{
+									console.log("search term");
 									self.render(choices.data);
 								}
 							})
