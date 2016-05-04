@@ -62,20 +62,16 @@ Reselect.directive('reselectChoices', ['ChoiceParser', '$compile',
 			compile: function(element, attrs) {
 
 				if (!attrs.options) {
-					console.warn('[reselect-choices] directive requires the [options] attribute.');
+					console.warn('[reselect-options] directive requires the [options] attribute.');
 					return;
 				}
 
 				return function($scope, $element, $attrs, $ctrls, transcludeFn) {
-					// get reselectChoices reselect dom elements
-					//console.log('ctrl ', $ctrls);
 					var $reselectChoices = $ctrls[0];
-					//console.log('reselectChoices ', $reselectChoices);
 					var $Reselect = $ctrls[1];
-					//console.log('reselect ', $Reselect);
 
 					/**
-					 * Manipulating the transluded html template that is used to display
+					 * Manipulating the transluded html template taht is used to display
 					 * each choice in the options list
 					 */
 
@@ -92,6 +88,9 @@ Reselect.directive('reselectChoices', ['ChoiceParser', '$compile',
 				'ReselectDataAdapter', 'ReselectAjaxDataAdapter',
 				function($scope, $element, $attrs, $parse, $http, ReselectDataAdapter,
 					ReselectAjaxDataAdapter) {
+
+					var $Reselect = $element.controller('reselect');
+
 					var self = this;
 
 					self.element = $element[0];
@@ -103,7 +102,6 @@ Reselect.directive('reselectChoices', ['ChoiceParser', '$compile',
 					self.choiceHeight = 36;
 					self.listHeight = 300;
 
-					self.search_term = '';
 					self.remotePagination = {};
 
 					self.haveChoices = false;
@@ -119,67 +117,61 @@ Reselect.directive('reselectChoices', ['ChoiceParser', '$compile',
 					self.CHOICE_TEMPLATE.attr('ng-mouseleave',
 						'$options.activeIndex = null');
 
-					var $Reselect = $element.controller('reselect');
 
 					/**
 					 * Options
 					 */
-					console.log('options prior to extend ', self.options);
+
 					self.options = angular.extend({}, reselectChoicesOptions, $attrs.reselectChoices || {});
-					console.log('options after extend ', self.options);
+
 					self.options.noOptionsText = $attrs.noOptionsText || self.options.noOptionsText;
 
 					/**
 					 * Choices Functionalities
 					 */
 
-					self.DataAdapter = null;
-
-					self.parsedOptions = ChoiceParser.parse($attrs.options);
+					$Reselect.parsedOptions = ChoiceParser.parse($attrs.options);
 
 					if ($attrs.remote) {
 						self.remoteOptions = $parse($attrs.remote)($scope.$parent);
 
-						self.DataAdapter = new ReselectAjaxDataAdapter(self.remoteOptions, self.parsedOptions);
+						$Reselect.DataAdapter = new ReselectAjaxDataAdapter(self.remoteOptions, $Reselect.parsedOptions);
 
-						self.DataAdapter.prepareGetData = function(){
-							self.DataAdapter.page = 1;
-							self.DataAdapter.pagination = {};
-							self.DataAdapter.updateData([]);
+						$Reselect.DataAdapter.prepareGetData = function(){
+							$Reselect.DataAdapter.page = 1;
+							$Reselect.DataAdapter.pagination = {};
+							$Reselect.DataAdapter.updateData([]);
 							self.render();
 						};
 					} else {
-						self.DataAdapter = new ReselectDataAdapter();
-						self.DataAdapter.updateData(self.parsedOptions.source($scope.$parent));
+						$Reselect.DataAdapter = new ReselectDataAdapter();
+						$Reselect.DataAdapter.updateData($Reselect.parsedOptions.source($scope.$parent));
 
-						self.DataAdapter.observe = function(onChange) {
+						$Reselect.DataAdapter.observe = function(onChange) {
 							$scope.$watchCollection(function() {
-								return self.parsedOptions.source($scope.$parent);
+								return $Reselect.parsedOptions.source($scope.$parent);
 							}, function(newChoices) {
-								self.DataAdapter.updateData(newChoices);
+								$Reselect.DataAdapter.updateData(newChoices);
 							});
 						};
 
 					}
 
-					self.DataAdapter.init();
+					$Reselect.DataAdapter.init();
 
 					self.getData = function(reset, loadingMore) {
 						if(reset === true){
-							self.DataAdapter.prepareGetData();
+							$Reselect.DataAdapter.prepareGetData();
 						}
 
 						self.is_loading = true;
 
-						self.DataAdapter.getData(self.search_term)
+						$Reselect.DataAdapter.getData($Reselect.search_term)
 							.then(function(choices) {
-								if(!self.search_term){
-									console.log('no search term');
-									self.DataAdapter.updateData(choices.data, loadingMore);
-									console.log(self.DataAdapter.updateData(choices.data, loadingMore));
+								if(!$Reselect.search_term){
+									$Reselect.DataAdapter.updateData(choices.data, loadingMore);
 									self.render();
 								}else{
-									console.log("search term");
 									self.render(choices.data);
 								}
 							})
@@ -188,13 +180,26 @@ Reselect.directive('reselectChoices', ['ChoiceParser', '$compile',
 							});
 					};
 
+					/**
+					 * Load More function
+					 *
+					 * This function gets run when user scroll to the bottom
+					 * of the dropdown OR if the data return does not fill up the
+					 * full height of the dropdown.
+					 *
+					 * This function also checks if remote option's onData
+					 * returns pagination.more === true
+					 */
 					self.loadMore = function() {
-						if(!self.DataAdapter.pagination || !self.DataAdapter.pagination.more){
+						if(!$Reselect.DataAdapter.pagination || !$Reselect.DataAdapter.pagination.more){
 							return;
 						}
 						self.getData(false, true);
 					};
 
+					/**
+					 * Search
+					 */
 					self.search = ReselectUtils.debounce(function(){
 						self.getData(true, false);
 					}, 300, false, function(){
@@ -210,7 +215,7 @@ Reselect.directive('reselectChoices', ['ChoiceParser', '$compile',
 					 */
 
 					self.LazyDropdown = new LazyScroller($scope, {
-						scopeName: self.parsedOptions.itemName,
+						scopeName: $Reselect.parsedOptions.itemName,
 						container: self.$container,
 						list: self.$list,
 						choiceHeight: 36,
@@ -223,38 +228,39 @@ Reselect.directive('reselectChoices', ['ChoiceParser', '$compile',
 
 					self.activeIndex = null;
 
-					self._setActiveIndex = function(index) {
-						self.activeIndex = index;
-					};
-
 					/**
 					 * Using the container id that is passed in, find the actual value by $eval the [value=""]
 					 * from the directive with the scope of the lazy container
 					 */
 
-					self._selectChoice = function(containerId) {
-						var selectedScope = self.LazyDropdown.lazyContainers[containerId].scope;
-
-						var value = angular.copy(self.parsedOptions.modelMapper(selectedScope));
-
-						$Reselect.selectValue(value, selectedScope[self.parsedOptions.itemName]);
-					};
+                    self._selectChoice = function(activeIndex) {
+                        var selectedScope = {};
+                        selectedScope[$Reselect.parsedOptions.itemName] = $Reselect.DataAdapter.data[activeIndex];
+                        var value = angular.copy($Reselect.parsedOptions.modelMapper(selectedScope));
+                        $Reselect.selectValue(value, selectedScope[$Reselect.parsedOptions.itemName]);
+                    };
 
 					/**
 					 * Rendering
+					 *
+					 * This function handles the render of the dropdown.
+					 * Choices are passed along to LazyContainer which will
+					 * handle the rendering of the data.
 					 */
-
-					self.$parent = $element.parent();
-
 					self.render = function(choices) {
-						self.LazyDropdown.choices = choices || self.DataAdapter.data;
-
+						self.LazyDropdown.choices = choices || $Reselect.DataAdapter.data;
 
 						if(self.LazyDropdown.choices && self.LazyDropdown.choices.length >= 0){
 							// Check if choices is empty
 							self.haveChoices = !!self.LazyDropdown.choices.length;
 
+							// Render the dropdown depending on the numbers of choices
 							var dimensions = self.LazyDropdown.renderContainer();
+
+							/**
+							 * LazyContainer's render function
+							 * @param {Boolean} Force - force the LazyContainer to re-render
+							 */
 							self.LazyDropdown._calculateLazyRender(true);
 
 							/**
